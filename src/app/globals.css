@@ -1,0 +1,90 @@
+:root {
+  --bg: #17181c;
+  --surface: #1b1c21;
+  --surface-sunken: #141519;
+  --fg: #ececf0;
+  --muted: #9a9aa5;
+  --accent: #7ef2c9;
+  --accent-ink: #0d1210;
+  --line: rgba(236, 236, 240, 0.1);
+
+  --shadow-out: 8px 8px 18px rgba(0, 0, 0, 0.45), -8px -8px 18px rgba(255, 255, 255, 0.03);
+  --shadow-out-lg: 14px 14px 28px rgba(0, 0, 0, 0.5), -10px -10px 24px rgba(255, 255, 255, 0.03);
+  --shadow-in: inset 4px 4px 10px rgba(0, 0, 0, 0.5), inset -4px -4px 10px rgba(255, 255, 255, 0.02);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: var(--font-text, system-ui), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Static fallback for the generative background under reduced-motion */
+.bg-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(126, 242, 201, 0.08), transparent 55%),
+    radial-gradient(circle at 75% 80%, rgba(126, 242, 201, 0.05), transparent 60%),
+    var(--bg);
+}
+
+/* Neumorphic primitives shared across Home / Login / Signup / Dashboard */
+.neu-panel {
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: var(--shadow-out);
+}
+.neu-panel--inset {
+  background: var(--surface-sunken);
+  box-shadow: var(--shadow-in);
+  border-radius: 16px;
+}
+
+.neu-btn-wrap {
+  display: inline-block;
+}
+.neu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.neu-btn--ghost {
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow-out);
+}
+.neu-btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 8px 24px rgba(126, 242, 201, 0.25);
+}
