@@ -8,6 +8,7 @@ import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { ToastStack, type ToastItem } from "@/components/ui/Toast";
 import { CommandPalette } from "@/components/ui/CommandPalette";
+import { BellIcon, BellOffIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/motion/EmptyState";
 import { useStaggerReveal } from "@/hooks/useStaggerReveal";
 import { useTypingActivity } from "@/hooks/useTypingActivity";
@@ -28,8 +29,8 @@ type Notepad = {
 
 const ACCENT_PRESETS = ["#7ef2c9", "#7ecbf2", "#f2c97e", "#f27e9e", "#b47ef2"];
 const AUTOSAVE_DELAY_MS = 1200;
-const SOUND_PREF_KEY = "klip:sound-feedback";
-const SOUND_PREF_EVENT = "klip:sound-feedback-changed";
+const SOUND_PREF_KEY = "clip:sound-feedback";
+const SOUND_PREF_EVENT = "clip:sound-feedback-changed";
 
 function subscribeSoundPref(onChange: () => void) {
   window.addEventListener(SOUND_PREF_EVENT, onChange);
@@ -79,9 +80,11 @@ export default function DashboardClient({
     [notepads, activeId]
   );
   const currentContent = draftContent ?? active?.content ?? "";
+  const charCount = currentContent.length;
+  const lineCount = currentContent === "" ? 0 : currentContent.split("\n").length;
 
   // Grow the editor to fit its content (page scrolls instead of a nested
-  // scrollbar) whenever the text, active notepad, or wrap mode changes -
+  // scrollbar) whenever the text, active notepad, or wrap mode changes —
   // also re-measured on resize, since wrapped line counts depend on width.
   useEffect(() => {
     const el = editorRef.current;
@@ -102,7 +105,7 @@ export default function DashboardClient({
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2400);
   }
 
-  // Full-text search + kind filter - refetch from the server (Postgres
+  // Full-text search + kind filter — refetch from the server (Postgres
   // ILIKE) as the query changes, debounced. Skipped until the user
   // actually touches search/filter so the initial SSR-loaded list isn't
   // immediately re-fetched for nothing.
@@ -146,7 +149,7 @@ export default function DashboardClient({
 
       if (res.headers.get("X-Queued-Offline") === "true") {
         setDraftContent(null);
-        if (showFeedback) pushToast("Saved offline - will sync when back online");
+        if (showFeedback) pushToast("Saved offline — will sync when back online");
         return;
       }
       if (!res.ok) {
@@ -167,7 +170,7 @@ export default function DashboardClient({
       }
     } catch {
       setSaving(false);
-      if (showFeedback) pushToast("Save failed - check connection", "error");
+      if (showFeedback) pushToast("Save failed — check connection", "error");
     }
   }
 
@@ -179,7 +182,7 @@ export default function DashboardClient({
   });
 
   // Debounced autosave: edits sync automatically after a short idle pause
-  // instead of requiring a manual Save press - reverses the earlier
+  // instead of requiring a manual Save press — reverses the earlier
   // no-autosave decision (see docs/memorybank.md ADR). Manual Save stays
   // available for an immediate, feedback-confirmed save.
   useEffect(() => {
@@ -250,7 +253,7 @@ export default function DashboardClient({
   }
 
   // Hidden delight: typing "party" into the command palette (see
-  // CommandPalette) calls this instead of filtering - a temporary
+  // CommandPalette) calls this instead of filtering — a temporary
   // intensity spike on the generative background.
   function triggerEasterEggBurst() {
     if (burstTimer.current) clearTimeout(burstTimer.current);
@@ -307,7 +310,7 @@ export default function DashboardClient({
               aria-pressed={soundEnabled}
               title="Toggle save sound/haptic feedback"
             >
-              {soundEnabled ? "🔔" : "🔕"}
+              {soundEnabled ? <BellIcon /> : <BellOffIcon />}
             </button>
             <Button onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</Button>
           </div>
@@ -445,6 +448,9 @@ export default function DashboardClient({
               />
             </Panel>
             <div className="dash__actions">
+              <span className="dash__stats">
+                {charCount.toLocaleString()} {charCount === 1 ? "character" : "characters"} · {lineCount.toLocaleString()} {lineCount === 1 ? "line" : "lines"}
+              </span>
               <Button variant="primary" onClick={() => performSave(true)} disabled={saving}>
                 {saving ? "Saving…" : "Save"}
               </Button>
@@ -493,8 +499,9 @@ export default function DashboardClient({
         .dash__editor-wrap { padding: 4px; max-width: 100%; overflow: hidden; }
         .dash__editor { display: block; width: 100%; min-height: 320px; resize: none; background: transparent; border: none; padding: 16px; color: var(--fg); font-size: 16px; line-height: 1.6; font-family: ui-monospace, monospace; outline: none; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
         .dash__editor[wrap="off"] { white-space: pre; word-break: normal; overflow-x: auto; overflow-y: hidden; }
-        .dash__actions { display: flex; justify-content: flex-end; }
+        .dash__actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
         .dash__actions button { min-height: 44px; }
+        .dash__stats { font-size: 0.8rem; color: var(--muted); white-space: nowrap; margin-right: auto; }
         .dash__placeholder { color: var(--muted); }
 
         @media (min-width: 861px) {
@@ -507,3 +514,4 @@ export default function DashboardClient({
     </div>
   );
 }
+
