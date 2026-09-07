@@ -63,7 +63,7 @@ export default function SignupPage() {
             <Link href="/" className="auth__brand">
               KlipBoard
             </Link>
-            <h1>Create your KlipBoard account</h1>
+            <h1>Create your Klip account</h1>
 
             <label>
               Username

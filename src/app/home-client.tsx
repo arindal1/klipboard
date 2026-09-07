@@ -89,7 +89,7 @@ export default function HomeClient() {
               <span className="home__mock-title">release-notes.md</span>
             </div>
             <Panel inset className="home__mock-body">
-              <p>## KlipBoard v1.1</p>
+              <p>## KlipBoard v0.1.1</p>
               <p>- Cross-device notepads</p>
               <p>- Text + code utilities</p>
               <p>- Custom auth + OAuth</p>

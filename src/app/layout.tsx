@@ -3,7 +3,7 @@ import "./globals.css";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const TITLE = "KlipBoard | Your clipboard, everywhere";
+const TITLE = "KlipBoard - Your clipboard, everywhere";
 const DESCRIPTION =
   "KlipBoard is a cross-device clipboard. Write text or code in a notepad and it's instantly available on every device you sign into.";
 
@@ -11,16 +11,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: "%s > KlipBoard",
+    template: "%s > Klip",
   },
   description: DESCRIPTION,
   keywords: [
-    "KlipBoard",
+    "clipboard",
     "notepad",
     "cross-device sync",
     "code snippets",
     "note taking app",
-    "clipboard"
+    "klipboard",
+    "arindal",
+    "arindal char"
   ],
   applicationName: "KlipBoard",
   authors: [{ name: "Arindal", url: "https://github.com/arindal1" }],

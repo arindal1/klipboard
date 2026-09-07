@@ -2,7 +2,7 @@
 
 ## Overview
 
-KlipBoard is a full-stack Next.js 15 (App Router) application backed by PostgreSQL.
+Clip is a full-stack Next.js 15 (App Router) application backed by PostgreSQL.
 It lets a user sign in and maintain "notepads" (text or code) that sync
 across every device they log into. There is no client-side storage of
 record - Postgres via Prisma is the single source of truth, read/written
@@ -178,7 +178,7 @@ Configuration lives in `.env` (see `.env.example`) - `DATABASE_URL`,
   (`getOwnedNotepad`) rather than in middleware, since it requires a DB read.
 - **Rate limiting:** `src/lib/rateLimit.ts` is an in-memory fixed-window
   limiter, applied to `/api/auth/signup` (5/10min/IP) and all notepad
-  mutations (60/min/user). Per-instance only - acceptable for KlipBoard's
+  mutations (60/min/user). Per-instance only - acceptable for Clip's
   single free-tier Render instance; would need a shared store (Redis)
   before scaling horizontally.
 - **Offline notepad saves:** `public/sw.js` intercepts `PUT

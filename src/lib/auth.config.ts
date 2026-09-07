@@ -8,6 +8,7 @@ import type { NextAuthConfig } from "next-auth";
 // the Prisma adapter and providers for use in Route Handlers/Server
 // Components, which run in the Node.js runtime.
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

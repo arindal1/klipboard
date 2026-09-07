@@ -1,12 +1,12 @@
-// Minimal offline app-shell cache for KlipBoard. Cache-first for the static
+// Minimal offline app-shell cache for Clip. Cache-first for the static
 // shell (icons, manifest), network-first for everything else so notepad
 // data is never served stale. Notepad PUT (save) requests get an extra
 // offline queue: if the network is unavailable, the request body is
 // stashed in IndexedDB and replayed via Background Sync (or the next
 // successful PUT) instead of failing outright.
-const SHELL_CACHE = "klipboard-shell-v1";
+const SHELL_CACHE = "clip-shell-v1";
 const SHELL_ASSETS = ["/", "/favicon.svg", "/manifest.webmanifest"];
-const QUEUE_DB = "klipboard-offline-queue";
+const QUEUE_DB = "clip-offline-queue";
 const QUEUE_STORE = "requests";
 const SYNC_TAG = "sync-notepad-queue";
 

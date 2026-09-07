@@ -52,17 +52,25 @@ const fragmentShader = /* glsl */ `
     vec2 uv = vUv;
     float n1 = snoise(uv * 2.0 + uTime * 0.035 + uMouse * 0.4);
     float n2 = snoise(uv * 1.1 - uTime * 0.02 + uMouse * 0.2);
-    float n = n1 * 0.6 + n2 * 0.4;
+    float n3 = snoise(uv * 4.5 - uTime * 0.05 + uMouse * 0.6);
+    float n = n1 * 0.55 + n2 * 0.3 + n3 * 0.15;
 
     vec3 graphite = vec3(0.090, 0.094, 0.110);
     vec3 graphiteLit = vec3(0.130, 0.135, 0.155);
     vec3 mint = vec3(0.494, 0.949, 0.788);
 
     vec3 col = mix(graphite, graphiteLit, smoothstep(-0.2, 0.5, n));
-    col = mix(col, mint * 0.22, smoothstep(0.45, 0.85, n) * (0.5 + uActivity * 0.6));
 
-    float vig = smoothstep(1.15, 0.25, length(uv - 0.5));
-    col *= mix(0.55, 1.0, vig);
+    // Rectangular, edge-based falloff (never a radial circle around the
+    // center) so there's no plateau of uniform brightness forming a
+    // visible disc - just a soft darkening toward the four screen edges.
+    float edgeX = smoothstep(0.0, 0.45, uv.x) * smoothstep(0.0, 0.45, 1.0 - uv.x);
+    float edgeY = smoothstep(0.0, 0.45, uv.y) * smoothstep(0.0, 0.45, 1.0 - uv.y);
+    float vig = edgeX * edgeY;
+    col *= mix(0.7, 1.0, vig);
+
+    float highlight = smoothstep(0.35, 0.95, n) * (0.5 + uActivity * 0.6);
+    col = mix(col, mint * 0.22, highlight);
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -126,15 +134,26 @@ export default function NeumorphicBackground({
       style={{ position: "fixed", inset: 0, zIndex: 0 }}
     >
       <ShaderPlane activityRef={activityRef} />
-      <Sparkles
-        count={Math.round(60 * intensity)}
-        scale={[8, 5, 2]}
-        size={2}
-        speed={0.15}
-        opacity={0.35}
-        color="#7ef2c9"
-        position={[0, 0, 0.2]}
-      />
+      <SparkleField intensity={intensity} />
     </Canvas>
+  );
+}
+
+// Scale is derived from the live viewport (in this orthographic setup the
+// camera's world units match screen size, same as the shader plane above)
+// instead of a hardcoded box - otherwise all sparkles collapse into a tiny
+// cluster near the origin and read as a single pulsing blurred circle.
+function SparkleField({ intensity }: { intensity: number }) {
+  const { viewport } = useThree();
+  return (
+    <Sparkles
+      count={Math.round(60 * intensity)}
+      scale={[viewport.width, viewport.height * 0.7, 2]}
+      size={2}
+      speed={0.15}
+      opacity={0.35}
+      color="#7ef2c9"
+      position={[0, 0, 0.2]}
+    />
   );
 }

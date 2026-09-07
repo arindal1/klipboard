@@ -4,7 +4,7 @@ export const EMPTY_DASHBOARD_TIPS = [
   "Tip: Cmd/Ctrl+K opens the quick-switch palette.",
   "Tip: give a notepad an accent color to spot it at a glance.",
   "Tip: tag notepads to filter them later.",
-  "KlipBoard syncs everything through Postgres - write here, read anywhere.",
+  "Klip syncs everything through Postgres - write here, read anywhere.",
   "Tip: Cmd/Ctrl+S saves the notepad you're editing right now.",
 ] as const;
 

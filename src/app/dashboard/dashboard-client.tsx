@@ -28,8 +28,8 @@ type Notepad = {
 
 const ACCENT_PRESETS = ["#7ef2c9", "#7ecbf2", "#f2c97e", "#f27e9e", "#b47ef2"];
 const AUTOSAVE_DELAY_MS = 1200;
-const SOUND_PREF_KEY = "klipboard:sound-feedback";
-const SOUND_PREF_EVENT = "klipboard:sound-feedback-changed";
+const SOUND_PREF_KEY = "klip:sound-feedback";
+const SOUND_PREF_EVENT = "klip:sound-feedback-changed";
 
 function subscribeSoundPref(onChange: () => void) {
   window.addEventListener(SOUND_PREF_EVENT, onChange);
@@ -60,11 +60,13 @@ export default function DashboardClient({
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [backgroundIntensity, setBackgroundIntensity] = useState(0.35);
   const [emptyTip] = useState(randomEmptyDashboardTip);
+  const [wrapEnabled, setWrapEnabled] = useState(true);
 
   const listRef = useStaggerReveal<HTMLUListElement>([notepads.length]);
   const { activityRef, bump } = useTypingActivity();
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const burstTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const soundEnabled = useSyncExternalStore(
     subscribeSoundPref,
@@ -77,6 +79,22 @@ export default function DashboardClient({
     [notepads, activeId]
   );
   const currentContent = draftContent ?? active?.content ?? "";
+
+  // Grow the editor to fit its content (page scrolls instead of a nested
+  // scrollbar) whenever the text, active notepad, or wrap mode changes -
+  // also re-measured on resize, since wrapped line counts depend on width.
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    function resize() {
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight}px`;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, [currentContent, wrapEnabled, active?.id]);
 
   function pushToast(message: string, kind: ToastItem["kind"] = "success") {
     const id = crypto.randomUUID();
@@ -398,6 +416,14 @@ export default function DashboardClient({
                   />
                 ))}
               </div>
+              <label className="dash__wrap-toggle">
+                <input
+                  type="checkbox"
+                  checked={wrapEnabled}
+                  onChange={(e) => setWrapEnabled(e.target.checked)}
+                />
+                Wrap text
+              </label>
             </div>
 
             <Panel
@@ -406,6 +432,7 @@ export default function DashboardClient({
               style={active.color ? { boxShadow: `var(--shadow-in), 0 0 0 1px ${active.color}33` } : undefined}
             >
               <textarea
+                ref={editorRef}
                 className="dash__editor"
                 value={currentContent}
                 onChange={(e) => {
@@ -413,6 +440,7 @@ export default function DashboardClient({
                   bump();
                 }}
                 spellCheck={active.kind === "TEXT"}
+                wrap={wrapEnabled ? "soft" : "off"}
                 placeholder={active.kind === "CODE" ? "// paste or write code…" : "Start typing…"}
               />
             </Panel>
@@ -428,11 +456,11 @@ export default function DashboardClient({
       </main>
 
       <style>{`
-        .dash { position: relative; display: flex; flex-direction: column; min-height: 100vh; height: 100dvh; font-family: system-ui, sans-serif; overflow: hidden; }
+        .dash { position: relative; display: flex; flex-direction: column; min-height: 100dvh; font-family: system-ui, sans-serif; overflow-x: hidden; }
         .dash__scrim { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: rgba(23,24,28,0.82); }
-        .dash__sidebar, .dash__main { position: relative; z-index: 2; min-height: 0; }
+        .dash__sidebar, .dash__main { position: relative; z-index: 2; min-width: 0; }
 
-        .dash__sidebar { padding: 16px; display: flex; flex-direction: column; gap: 14px; max-height: 42vh; overflow-y: auto; }
+        .dash__sidebar { padding: 16px; display: flex; flex-direction: column; gap: 14px; max-height: 42vh; overflow-y: auto; overflow-x: hidden; }
         .dash__user { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 16px; font-size: 0.9rem; }
         .dash__user-actions { display: flex; align-items: center; gap: 8px; }
         .dash__icon-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--muted); padding: 4px; }
@@ -441,34 +469,37 @@ export default function DashboardClient({
 
         .dash__search { display: flex; gap: 8px; padding: 10px 12px; }
         .dash__search-input { flex: 1; min-width: 0; background: none; border: none; color: var(--fg); outline: none; font-family: inherit; font-size: 16px; }
-        .dash__search-select { background: var(--surface); color: var(--fg); border: none; border-radius: 8px; font-size: 0.85rem; font-family: inherit; padding: 4px; }
+        .dash__search-select { background: var(--surface); color: var(--fg); border: none; border-radius: 8px; font-size: 0.85rem; font-family: inherit; padding: 4px; max-width: 100%; }
 
-        .dash__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; }
-        .dash__list-item { display: flex; align-items: stretch; border-radius: 14px; }
+        .dash__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+        .dash__list-item { display: flex; align-items: stretch; border-radius: 14px; min-width: 0; max-width: 100%; }
         .dash__list-item.active { background: var(--surface); box-shadow: var(--shadow-out); }
-        .dash__list-item button:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; padding: 12px 14px; background: none; border: none; color: var(--fg); cursor: pointer; text-align: left; min-height: 44px; }
-        .dash__list-title { font-size: 0.92rem; }
-        .dash__list-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .dash__list-kind { font-size: 0.72rem; color: var(--muted); }
-        .dash__list-tags { font-size: 0.72rem; color: var(--accent); }
-        .dash__delete { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 14px; font-size: 1.2rem; min-width: 44px; }
+        .dash__list-item button:first-child { flex: 1; min-width: 0; max-width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; padding: 12px 14px; background: none; border: none; color: var(--fg); cursor: pointer; text-align: left; min-height: 44px; overflow: hidden; }
+        .dash__list-title { display: block; max-width: 100%; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dash__list-meta { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; min-width: 0; max-width: 100%; }
+        .dash__list-kind { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
+        .dash__list-tags { font-size: 0.72rem; color: var(--accent); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dash__delete { flex-shrink: 0; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0 14px; font-size: 1.2rem; min-width: 44px; }
         .dash__empty { color: var(--muted); font-size: 0.85rem; }
 
-        .dash__main { display: flex; flex-direction: column; padding: 16px; gap: 12px; flex: 1; overflow: hidden; }
+        .dash__main { display: flex; flex-direction: column; padding: 16px; gap: 12px; flex: 1; }
         .dash__title-input { width: 100%; min-width: 0; background: none; border: none; font-size: 1.2rem; color: var(--fg); font-weight: 600; outline: none; font-family: inherit; }
         .dash__meta-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
         .dash__tags-input { flex: 1; min-width: 140px; background: none; border: none; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 16px; outline: none; font-family: inherit; padding: 6px 0; }
         .dash__swatches { display: flex; gap: 10px; flex-wrap: wrap; }
-        .dash__swatch { width: 26px; height: 26px; border-radius: 999px; border: none; cursor: pointer; }
-        .dash__editor-wrap { flex: 1; min-height: 0; padding: 4px; }
-        .dash__editor { width: 100%; height: 100%; resize: none; background: transparent; border: none; padding: 16px; color: var(--fg); font-size: 16px; line-height: 1.6; font-family: ui-monospace, monospace; outline: none; }
+        .dash__swatch { width: 26px; height: 26px; border-radius: 999px; border: none; cursor: pointer; flex-shrink: 0; }
+        .dash__wrap-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; }
+        .dash__wrap-toggle input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+        .dash__editor-wrap { padding: 4px; max-width: 100%; overflow: hidden; }
+        .dash__editor { display: block; width: 100%; min-height: 320px; resize: none; background: transparent; border: none; padding: 16px; color: var(--fg); font-size: 16px; line-height: 1.6; font-family: ui-monospace, monospace; outline: none; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
+        .dash__editor[wrap="off"] { white-space: pre; word-break: normal; overflow-x: auto; overflow-y: hidden; }
         .dash__actions { display: flex; justify-content: flex-end; }
         .dash__actions button { min-height: 44px; }
         .dash__placeholder { color: var(--muted); }
 
         @media (min-width: 861px) {
-          .dash { flex-direction: row; }
-          .dash__sidebar { width: 300px; flex: none; max-height: none; padding: 20px; }
+          .dash { flex-direction: row; align-items: flex-start; }
+          .dash__sidebar { width: 300px; flex: none; max-height: none; padding: 20px; position: sticky; top: 0; height: 100dvh; }
           .dash__main { padding: 28px; }
           .dash__title-input { font-size: 1.4rem; }
         }
